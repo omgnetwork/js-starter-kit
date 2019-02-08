@@ -1,0 +1,63 @@
+<html>
+
+<body>
+  <script type="text/javascript" src="./src/dist/lightwallet.min.js"></script>
+  <script type="text/javascript" src="./src/dist/omg.js"></script>
+  <script type="text/javascript" src="./src/dist/web3.js"></script>
+  <script type="text/javascript" src="./src/dist/hooked-web3-provider.js"></script>
+  <script type="text/javascript" src="./src/omg-wallet.js"></script>
+
+  <style>
+    body {
+      font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+    .balance {
+      font-family: monospace;
+    }
+  </style>
+
+  <h1>OmiseGO Wallet</h1>
+
+  <div id="walletArea" class="wallet-area">
+    <h2>Create Wallet</h2>
+    <div><button onclick="newWallet()">Create new Wallet</button></div>
+    <div>
+      <button onclick="restoreSeed()">Restore from seed</button>
+      <input type="text" id="seed" value="" size="80"></input>
+    </div>
+  </div>
+
+  <div id="addressArea" class="address-area" style="display:none">
+    <h2>Addresses</h2>
+    <div>
+      <button onclick="newAddress('')">Generate new address</button>
+      <button onclick="showBalances()">Refresh balances</button>
+    </div>
+    <h4>Rootchain balance</h4>
+    <div id="rootchainBalance" class="balance"></div>
+    <h4>Childchain balance</h4>
+    <div id="childchainBalance" class="balance"></div>
+  </div>
+
+  <div id="functionArea" class="function-area" style="display:none">
+    <h2>Deposit</h2>
+    <div>From address: <input type="text" id="depositFromAddress"></input></div>
+    <div>Token contract address (blank for ETH): <input type="text" id="depositContractAddress" value=""></input></div>
+    <div>Value: <input type="text" id="depositValue"><button onclick="deposit()">Send</button></div>
+
+    <h2>Transfer</h2>
+    <div>From address: <input type="text" id="transferFromAddress"></input></div>
+    <div>To address: <input type="text" id="transferToAddress"></div>
+    <div>Token contract address (blank for ETH): <input type="text" id="transferContractAddress" value=""></input></div>
+    <div>Value: <input type="text" id="transferValue"><button onclick="childchainTransfer()">Send</button></div>
+
+    <h2>Exit</h2>
+    <div>
+      From address: <input type="text" id="exitFromAddress"></input>
+      <button onclick="startStandardExit()">Exit</button>
+    </div>
+  </div>
+
+</body>
+
+</html>

@@ -115,13 +115,13 @@ function deposit () {
   var fromAddr = document.getElementById('depositFromAddress').value
   var value = document.getElementById('depositValue').value
   var tokenContract = document.getElementById('depositContractAddress').value
-  tokenContract = tokenContract || OmgUtil.transaction.NULL_ADDRESS
+  tokenContract = tokenContract || OmgUtil.transaction.ETH_CURRENCY
 
   // Create the deposit transaction
-  const depositTx = OmgUtil.transaction.encodeDepositTx(fromAddr, value, tokenContract)
+  const depositTx = OmgUtil.transaction.encodeDeposit(fromAddr, value, tokenContract)
   console.log(depositTx)
 
-  if (tokenContract === OmgUtil.transaction.NULL_ADDRESS) {
+  if (tokenContract === OmgUtil.transaction.ETH_CURRENCY) {
     rootChain.depositEth(depositTx, value, { from: fromAddr })
       .then(txhash => {
         console.log('txhash: ' + txhash.transactionHash)
@@ -139,7 +139,7 @@ async function childchainTransfer () {
   var fromAddr = document.getElementById('transferFromAddress').value
   var toAddr = document.getElementById('transferToAddress').value
   var tokenContract = document.getElementById('transferContractAddress').value
-  tokenContract = tokenContract || OmgUtil.transaction.NULL_ADDRESS
+  tokenContract = tokenContract || OmgUtil.transaction.ETH_CURRENCY
   var value = document.getElementById('transferValue').value
 
   const utxos = await childChain.getUtxos(fromAddr)

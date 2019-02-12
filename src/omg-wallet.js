@@ -143,21 +143,29 @@ async function childchainTransfer () {
   var value = document.getElementById('transferValue').value
 
   const utxos = await childChain.getUtxos(fromAddr)
+  const utxosToSpend = selectUtxos(utxos, value, tokenContract)
+  if (!utxosToSpend) {
+    alert(`No utxo big enough to cover the amount ${value}`)
+    return
+  }
 
-  // Convert 'amount' to a Number
-  utxos[0].amount = Number(utxos[0].amount)
-  const CHANGE_AMOUNT = utxos[0].amount - value
   const txBody = {
-    inputs: [utxos[0]],
+    inputs: utxosToSpend,
     outputs: [{
       owner: toAddr,
       currency: tokenContract,
       amount: Number(value)
-    }, {
+    }]
+  }
+
+  if (utxosToSpend[0].amount > value) {
+    // Need to add a 'change' output
+    const CHANGE_AMOUNT = utxosToSpend[0].amount - value
+    txBody.outputs.push({
       owner: fromAddr,
       currency: tokenContract,
       amount: CHANGE_AMOUNT
-    }]
+    })
   }
 
   // Create the unsigned transaction
@@ -181,6 +189,15 @@ async function childchainTransfer () {
     const result = await childChain.submitTransaction(signedTx)
     console.log(`Submitted transaction: ${JSON.stringify(result)}`)
   })
+}
+
+function selectUtxos (utxos, amount, currency) {
+  const correctCurrency = utxos.filter(utxo => utxo.currency === currency)
+  // Just find the first utxo that can fulfill the amount
+  const selected = correctCurrency.find(utxo => utxo.amount >= amount)
+  if (selected) {
+    return [selected]
+  }
 }
 
 async function startStandardExit () {

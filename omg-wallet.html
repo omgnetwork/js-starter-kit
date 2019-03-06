@@ -16,11 +16,11 @@
     }
   </style>
 
-  <h1>OmiseGO Wallet</h1>
+  <h1>Minimal Browser Wallet</h1>
 
   <div id="walletArea" class="wallet-area">
     <h2>Create Wallet</h2>
-    <div><button onclick="newWallet()">Create new Wallet</button></div>
+    <div><button onclick="newWallet()">Create new wallet</button></div>
     <div>
       <button onclick="restoreSeed()">Restore from seed</button>
       <input type="text" id="seed" value="" size="80"></input>
@@ -33,9 +33,9 @@
       <button onclick="newAddress('')">Generate new address</button>
       <button onclick="showBalances()">Refresh balances</button>
     </div>
-    <h4>Rootchain balance</h4>
+    <h4>Rootchain balances</h4>
     <div id="rootchainBalance" class="balance"></div>
-    <h4>Childchain balance</h4>
+    <h4>Childchain balances</h4>
     <div id="childchainBalance" class="balance"></div>
   </div>
 

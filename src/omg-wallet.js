@@ -39,7 +39,7 @@ function newWallet () {
   var randomSeed = lightwallet.keystore.generateRandomSeed()
 
   var infoString = 'Your new wallet seed is: "' + randomSeed +
-    '". Please write it down on paper or in a password manager, you will need it to access your wallet. ' +
+    '". Please write it down on paper or in a password manager. You will need it to access your wallet. ' +
     'Please enter a password to encrypt your seed while in the browser.'
 
   var password = prompt(infoString, 'Password')
@@ -48,7 +48,7 @@ function newWallet () {
 }
 
 function restoreSeed () {
-  var password = prompt('Enter Password to encrypt your seed', 'Password')
+  var password = prompt('Enter a password to encrypt your seed', 'Password')
   createVault(password, document.getElementById('seed').value)
   document.getElementById('seed').value = ''
   showWalletUI()
@@ -56,7 +56,7 @@ function restoreSeed () {
 
 function newAddress (password) {
   if (password === '') {
-    password = prompt('Enter password', 'Password')
+    password = prompt('Enter your password', 'Password')
   }
 
   globalKeystore.keyFromPassword(password, function (err, pwDerivedKey) {
@@ -94,7 +94,7 @@ async function showBalances () {
 }
 
 function showSeed () {
-  var password = prompt('Enter password to show your seed. Do not let anyone else see your seed.', 'Password')
+  var password = prompt('Enter your password to display your seed. Do not let anyone else see your seed.', 'Password')
 
   globalKeystore.keyFromPassword(password, function (err, pwDerivedKey) {
     if (err) {
@@ -171,7 +171,7 @@ async function childchainTransfer () {
   // Create the unsigned transaction
   const unsignedTx = childChain.createTransaction(txBody)
 
-  const password = prompt('Enter password', 'Password')
+  const password = prompt('Enter your password', 'Password')
 
   // Sign it
   globalKeystore.keyFromPassword(password, async function (err, pwDerivedKey) {

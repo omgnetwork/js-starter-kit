@@ -1,0 +1,162 @@
+<html>
+
+<head>
+  <link rel="stylesheet" type="text/css" href="./src/semantic/semantic.min.css">
+  <link rel="shortcut icon" href='./images/favicon.png'>
+  <script type="text/javascript" src="./src/dist/lightwallet.min.js"></script>
+  <script type="text/javascript" src="./src/dist/omg.js"></script>
+  <script type="text/javascript" src="./src/dist/web3.js"></script>
+  <script type="text/javascript" src="./src/dist/hooked-web3-provider.js"></script>
+  <script type="text/javascript" src="./src/omg-wallet.js"></script>
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+    crossorigin="anonymous"></script>
+  <script src="./src/semantic/semantic.min.js"></script>
+  <style>
+    body {
+      font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    .balance {
+      font-family: monospace;
+    }
+
+    h2 {
+      background-color: lightgrey;
+      display: inline-block;
+      padding: 5px 20px;
+      border-radius: 10px;
+    }
+
+    .fn-container {
+      display: flex;
+      align-items: stretch;
+      height: 450px;
+      justify-content: space-between;
+      width: 100%;
+
+    }
+
+    .fn-container>div {
+      flex: 0 0 30%;
+    }
+
+    .fn-container .segment {
+      margin-top: 0;
+      margin-bottom: 0;
+
+    }
+
+    .fn-container button {
+      float: right;
+    }
+
+    .create-wallet {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    button.ui.primary.button {
+      background-color: #1a56f0;
+    }
+
+    button.ui.primary.button:hover {
+      background-color: #1a56f0;
+    }
+
+    button.ui.primary.button:focus {
+      background-color: #1a56f0;
+    }
+  </style>
+</head>
+<title>js-kit-demo</title>
+<body>
+  <div class="ui stackable grid container" style='padding: 50px 0;'>
+    <div class='row'>
+      <img src='./images/OmiseGO_Logo.svg' />
+      <button class="ui primary button create-wallet" onclick="newWallet()">Create new Wallet</button>
+    </div>
+    <div id="walletArea" class="wallet-area ui segment" style='width: 100%'>
+      <div class='row'>
+        <button class="ui primary button" onclick="restoreSeed()">Restore from seed</button>
+        <div class='ui input'>
+          <input type="text" id="seed" value="" size="80" placeholder='your seed phase...'></input>
+        </div>
+      </div>
+      <div>
+      </div>
+    </div>
+    <div class='row'>
+      <div id="addressArea" class="address-area ui segment" style="display:none; width: 100%;">
+        <h2>Addresses</h2>
+        <div>
+          <button class="ui primary button" onclick="newAddress('')">Generate new address</button>
+          <button class="ui primary button" onclick="showBalances()">Refresh balances</button>
+        </div>
+        <h4>Rootchain balance</h4>
+        <div id="rootchainBalance" class="balance"></div>
+        <h4>Childchain balance</h4>
+        <div id="childchainBalance" class="balance"></div>
+      </div>
+    </div>
+    <div class='row'>
+      <div id="functionArea" class="function-area grid container" style="display:none; width: 100%;">
+        <div class='fn-container'>
+          <div class='ui segment'>
+            <h2>Deposit</h2>
+            <form class="ui form">
+              <div class="field">
+                <label>From address:</label>
+                <input type="text" id="depositFromAddress"></input>
+              </div>
+              <div class="field">
+                <label>Token contract address (blank for ETH):</label>
+                <input type="text" id="depositContractAddress" value=""></input>
+              </div>
+              <div class="field">
+                <label>Value:</label>
+                <input type="text" id="depositValue">
+              </div>
+              <button class="ui primary button" onclick="deposit()">Send</button>
+            </form>
+          </div>
+          <div class='ui segment'>
+            <h2>Transfer</h2>
+            <form class="ui form">
+              <div class="field">
+                <label>From address:</label>
+                <input type="text" id="transferFromAddress"></input>
+              </div>
+              <div class="field">
+                <label>To address:</label>
+                <input type="text" id="transferToAddress">
+              </div>
+              <div class="field">
+                <label>Token contract address (blank for ETH):</label>
+                <input type="text" id="transferContractAddress" value=""></input>
+              </div>
+              <div class="field">
+                <label>Value:</label>
+                <input type="text" id="transferValue">
+              </div>
+              <button class="ui primary button" onclick="childchainTransfer()">Send</button>
+            </form>
+          </div>
+          <div class='ui segment'>
+            <h2>Exit</h2>
+            <form class="ui form">
+              <div class="field">
+                <label>From address:</label>
+                <input type="text" id="exitFromAddress"></input>
+              </div>
+              <button class="ui primary button" onclick="startStandardExit()">Exit</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

@@ -71,6 +71,7 @@
   </style>
 </head>
 <title>js-kit-demo</title>
+
 <body>
   <div class="ui stackable grid container" style='padding: 50px 0;'>
     <div class='row'>
@@ -115,8 +116,13 @@
                 <input type="text" id="depositContractAddress" value=""></input>
               </div>
               <div class="field">
-                <label>Value:</label>
-                <input type="text" id="depositValue">
+                <label>Value (wei):</label>
+                <div class="ui right labeled input">
+                  <input type="text" id="depositValue">
+                  <div class="ui basic label">
+                    wei
+                  </div>
+                </div>
               </div>
               <button class="ui primary button" onclick="deposit()">Send</button>
             </form>
@@ -137,8 +143,13 @@
                 <input type="text" id="transferContractAddress" value=""></input>
               </div>
               <div class="field">
-                <label>Value:</label>
-                <input type="text" id="transferValue">
+                <label>Value (wei):</label>
+                <div class="ui right labeled input">
+                  <input type="text" id="transferValue">
+                  <div class="ui basic label">
+                    wei
+                  </div>
+                </div>
               </div>
               <button class="ui primary button" onclick="childchainTransfer()">Send</button>
             </form>

@@ -208,7 +208,7 @@ async function startStandardExit () {
     const exitData = await childChain.getExitData(utxos[0])
 
     let receipt = await rootChain.startStandardExit(
-      exitData.utxo_pos,
+      exitData.utxo_pos.toString(),
       exitData.txbytes,
       exitData.proof,
       {

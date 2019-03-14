@@ -16,7 +16,7 @@ _Initial Setup_
 
 _Usage_
 
-1. Open up your browser and navigate to the omg-wallet.html
+1. Open up your browser and navigate to the index.html
 
 2. click on `create wallet`, make sure you write your seed phrase somewhere
 

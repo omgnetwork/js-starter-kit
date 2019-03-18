@@ -28,7 +28,7 @@ function createVault (password, seed) {
     })
     web3.setProvider(web3Provider)
 
-    rootChain = new RootChain(web3Provider, PLASMA_CONTRACT_ADDRESS)
+    rootChain = new RootChain(web3, PLASMA_CONTRACT_ADDRESS)
     childChain = new ChildChain(WATCHER_URL, CHILDCHAIN_URL)
 
     newAddress(password)

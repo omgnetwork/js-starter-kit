@@ -28,7 +28,7 @@ function createVault (password, seed) {
     })
     web3.setProvider(web3Provider)
 
-    rootChain = new RootChain(web3Provider, PLASMA_CONTRACT_ADDRESS)
+    rootChain = new RootChain(web3, PLASMA_CONTRACT_ADDRESS)
     childChain = new ChildChain(WATCHER_URL, CHILDCHAIN_URL)
 
     newAddress(password)
@@ -158,13 +158,13 @@ async function childchainTransfer () {
     }]
   }
 
-  if (utxosToSpend[0].amount > value) {
+  if (new BigNumber(utxosToSpend[0].amount).gt(new BigNumber(value))) {
     // Need to add a 'change' output
-    const CHANGE_AMOUNT = utxosToSpend[0].amount - value
+    const CHANGE_AMOUNT = new BigNumber(utxosToSpend[0].amount).minus(new BigNumber(value))
     txBody.outputs.push({
       owner: fromAddr,
       currency: tokenContract,
-      amount: CHANGE_AMOUNT
+      amount: CHANGE_AMOUNT.toString()
     })
   }
 
@@ -194,7 +194,7 @@ async function childchainTransfer () {
 function selectUtxos (utxos, amount, currency) {
   const correctCurrency = utxos.filter(utxo => utxo.currency === currency)
   // Just find the first utxo that can fulfill the amount
-  const selected = correctCurrency.find(utxo => utxo.amount >= amount)
+  const selected = correctCurrency.find(utxo => new BigNumber(utxo.amount).gte(new BigNumber(amount)))
   if (selected) {
     return [selected]
   }
@@ -205,6 +205,8 @@ async function startStandardExit () {
 
   const utxos = await childChain.getUtxos(fromAddr)
   if (utxos.length > 0) {
+    // NB This only exits the first UTXO.
+    // Selecting _which_ UTXO to exit is left as an exercise for the reader...
     const exitData = await childChain.getExitData(utxos[0])
 
     let receipt = await rootChain.startStandardExit(

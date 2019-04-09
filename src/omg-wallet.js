@@ -164,7 +164,7 @@ async function childchainTransfer () {
     txBody.outputs.push({
       owner: fromAddr,
       currency: tokenContract,
-      amount: CHANGE_AMOUNT.toString()
+      amount: CHANGE_AMOUNT
     })
   }
 

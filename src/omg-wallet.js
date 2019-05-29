@@ -71,6 +71,23 @@ function newAddress (password) {
   })
 }
 
+function getPrivateKeys() {
+  var addresses = globalKeystore.getAddresses()
+  let password = prompt('Enter password', 'Password')
+
+  globalKeystore.keyFromPassword(password, function (err, pwDerivedKey) {
+    if (err) {
+      console.error(err)
+      return
+    }
+    // Show the first 2 addresses in the wallet
+    for(i=0;i<addresses.length;i++) {
+      let privatekey = globalKeystore.exportPrivateKey(addresses[i], pwDerivedKey)
+      console.log('address: '+ addresses[i] + 'private key: 0x' + privatekey) 
+    } 
+  })
+}
+
 async function showBalances () {
   var addresses = globalKeystore.getAddresses()
   document.getElementById('rootchainBalance').innerHTML = 'Retrieving addresses...'

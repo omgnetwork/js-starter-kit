@@ -83,7 +83,7 @@ function getPrivateKeys() {
     // Show the first 2 addresses in the wallet
     for(i=0;i<addresses.length;i++) {
       let privatekey = globalKeystore.exportPrivateKey(addresses[i], pwDerivedKey)
-      console.log('address: '+ addresses[i] + 'private key: 0x' + privatekey) 
+      console.log('address: '+ addresses[i] + '\n private key: 0x' + privatekey) 
     } 
   })
 }

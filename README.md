@@ -1,4 +1,4 @@
-# vue-js-starter-kit
+# js-starter-kit
 
 This is an example client side wallet built in Vue.js which allows you to make interactions with the OMG network from the browser.
 

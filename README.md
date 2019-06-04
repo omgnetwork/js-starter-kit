@@ -1,38 +1,39 @@
-# js-starter-kit
+# vue-js-starter-kit
 
-Welcome to js-starter-kit!
+This is an example client side wallet built in Vue.js which allows you to make interactions with the OMG network from the browser.
 
-This is a minimal client side wallet which allows you to make interactions with the OmiseGO network from a browser.
+Before you get started, make sure you have a local instance of elixir-omg running or have access to an already deployed network. Feel free to build on top of the functionalities which you see here.
 
-Before you get started, make sure you have a local instance of `elixir-omg` running or have access to an already deployed network. Feel free to build on top of the functionalities which you see here.
+NOTE: 
+- This kit is meant for development and demonstration purposes. It is not safe for production use.
+- This example application is compatible with `elixir-omg v0.2`
 
-WARNING: This kit is meant for development and demonstration purposes. It is not safe for production use!
+## Initial Setup
 
-_Initial Setup_
+Make sure you have access to the endpoints including Watcher, Childchain, address of the Plasma Contract and Web3 RPC endpoint. The wallet also requires an in-browser web3 wallet like MetaMask to sign transactions.
 
-1. Make sure you have access to the endpoints including `Watcher` and `Childchain`, address of the `Plasma Contract` and `Web3 Provider`.
+the endpoints for production deployment can be found [here](https://github.com/omisego/dev-portal/blob/master/guides/network_endpoints.md)
 
-1. Open up the file `omg-wallet.js` in your favorite text editor.
+1. Installing dependencies by running `npm install` on the root directory
 
-1. Replace the current configuration in `omg-wallet.js` with your endpoints for WEB3_PROVIDER_URL, WATCHER_URL, CHILDCHAIN_URL, PLASMA_CONTRACT_ADDRESS.
+2. Open up the file config.js in your favorite text editor.
 
-1. Save the `omg-wallet.js`.
+Replace the current configuration in config.js with your endpoints for `web3ProviderUrl`, `watcherUrl`, `childchainUrl`, `plasmaContractAddress`.
 
+Save the config.js file.
 
-_Usage_
+3. Start the app by running `npm run dev`
 
-1. Open up your browser and navigate to the `index.html`
+## Running the Starter-kit
 
-2. Click on `Create new wallet`.
+Open up your browser and navigate to `http://localhost:8080`, Make sure your Metamask is currently unlocked. You should be able to see your account balance on both Root chain and Child chain.
 
-3. Ensure that you write down your seed phrase somewhere safe and enter in a password.
+From here, you can perform 3 actions:
 
-4. Send some ETH to your newly generated browser wallet from Metamask or whichever wallet you have.
+1. Deposit into the OMG Network: After 12 blocks confirmations, your Rootchain balance will be updated, click on the Refresh button. 
 
-5. Optional: Send some ERC20 tokens to your newly generated browser wallet.
+2. Transfer the funds on the OMG Network: Fill in the values for the Transfer fields and click Ok. Depending on the network congestion, you may have to wait for a little while for the transaction to be included in a block. Click on the Refresh balances button until your balance has been properly reflected.
 
-6. Deposit into the OmiseGO Network: Here you will have to wait for a little bit. Keep refreshing via the `refresh` button. After a while, your balance will be updated.
+3. Exit the funds back to Rootchain: Fill in an address that has funds in the OMG Network and click on OK, your exit period will start. Do note that the exit period will be varied based on the configuration of each `elixir-omg` deployment. After the certain amount of time has passed, you will be able to process the exit and receive your funds back.
 
-7. Make a transfer on the OmiseGO Network: Fill in the values for the `Transfer` fields and click `Send`. Depending on the network congestion, you may have to wait for a little while for the transaction to be included in a block. Click on the `Refresh balances` button until your balance has been properly reflected.
-
-8. Exit the funds: Fill in an address that has funds in the OmiseGO Network and click on `Exit`.
+NOTE: the current wallet does not offer a way to call `processExit()` yet.

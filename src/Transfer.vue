@@ -40,6 +40,19 @@ limitations under the License.
           Amount:
           <input v-model="transferAmount">
         </div>
+        <div class="popup-input">
+          Fee Token:
+          <select id="feeToken" v-model="feeToken">
+            <option
+              v-for="balance in activeAccount.childBalance"
+              v-bind:value="balance.currency"
+            >{{ balance.symbol != 'Unknown ERC20' ? balance.symbol : balance.currency }}</option>
+          </select>
+        </div>
+        <div class="popup-input">
+          Fee Amount:
+          <input v-model="feeAmount">
+        </div>
       </div>
       <div>
         <md-button v-on:click="transfer(); $emit('close')" class="md-raised">Ok</md-button>
@@ -68,6 +81,8 @@ export default {
   data() {
     return {
       transferCurrency: this.OmgUtil.transaction.ETH_CURRENCY,
+      feeToken: this.OmgUtil.transaction.ETH_CURRENCY,
+      feeAmount: 0,
       transferAmount: 0,
       transferToAddress: ''
     }
@@ -89,7 +104,9 @@ export default {
           toAddr,
           value, 
           tokenContract,
-          this.rootChain.plasmaContractAddress
+          this.rootChain.plasmaContractAddress,
+          this.feeToken,
+          this.feeAmount
         )
         this.$parent.info(`Submitted transaction: ${JSON.stringify(result)}`)
       } catch (err) {

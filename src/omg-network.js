@@ -80,21 +80,12 @@ const omgNetwork = {
     }
 
     // add change outputs
-    const amountUtxos = utxosToSpend.filter(i => i.currency === currency)
-    const feeUtxos = utxosToSpend.filter(i => i.currency === feeToken)
+    if (feeToken === currency) {
+      const amountUtxosBalance = utxosToSpend.reduce((prev, curr) => {
+        return prev.iadd(numberToBN(curr.amount))
+      }, numberToBN(0))
 
-    const amountUtxosBalance = amountUtxos.reduce((prev, curr) => {
-      return prev.iadd(numberToBN(curr.amount))
-    }, numberToBN(0))
-
-    const feeUtxosBalance = feeUtxos.reduce((prev, curr) => {
-      return prev.iadd(numberToBN(curr.amount))
-    }, numberToBN(0))
-
-    const amountOver = amountUtxosBalance.sub(numberToBN(amount))
-    const feeOver = feeUtxosBalance.sub(numberToBN(feeAmount))
-
-    if (amountOver.gt(numberToBN(0))) {
+      const amountOver = amountUtxosBalance.sub(numberToBN(amount).iadd(numberToBN(feeAmount)))
       txBody.outputs.push({
         owner: from,
         currency,
@@ -102,12 +93,36 @@ const omgNetwork = {
       })
     }
 
-    if (feeOver.gt(numberToBN(0))) {
-      txBody.outputs.push({
-        owner: from,
-        currency: feeToken,
-        amount: feeOver
-      })
+    if (feeToken !== currency) {
+      const amountUtxos = utxosToSpend.filter(i => i.currency === currency)
+      const feeUtxos = utxosToSpend.filter(i => i.currency === feeToken)
+  
+      const amountUtxosBalance = amountUtxos.reduce((prev, curr) => {
+        return prev.iadd(numberToBN(curr.amount))
+      }, numberToBN(0))
+  
+      const feeUtxosBalance = feeUtxos.reduce((prev, curr) => {
+        return prev.iadd(numberToBN(curr.amount))
+      }, numberToBN(0))
+  
+      const amountOver = amountUtxosBalance.sub(numberToBN(amount))
+      const feeOver = feeUtxosBalance.sub(numberToBN(feeAmount))
+  
+      if (amountOver.gt(numberToBN(0))) {
+        txBody.outputs.push({
+          owner: from,
+          currency,
+          amount: amountOver
+        })
+      }
+  
+      if (feeOver.gt(numberToBN(0))) {
+        txBody.outputs.push({
+          owner: from,
+          currency: feeToken,
+          amount: feeOver
+        })
+      }
     }
 
     // Get the transaction data

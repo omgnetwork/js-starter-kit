@@ -69,9 +69,6 @@ const omgNetwork = {
       feeToken,
       feeAmount
     )
-    if (!utxosToSpend) {
-      throw new Error(`No utxo big enough to cover the amount ${amount}`)
-    }
 
     const txBody = {
       inputs: utxosToSpend,
@@ -82,34 +79,43 @@ const omgNetwork = {
       }]
     }
 
-    const bnAmount = numberToBN(utxosToSpend[0].amount)
-    if (bnAmount.gt(numberToBN(amount))) {
-      // Need to add a 'change' output
-      const CHANGE_AMOUNT = bnAmount.sub(numberToBN(amount))
+    // add change outputs
+    const amountUtxos = utxosToSpend.filter(i => i.currency === currency)
+    const feeUtxos = utxosToSpend.filter(i => i.currency === feeToken)
+
+    const amountUtxosBalance = amountUtxos.reduce((prev, curr) => {
+      return prev.iadd(numberToBN(curr.amount))
+    }, numberToBN(0))
+
+    const feeUtxosBalance = feeUtxos.reduce((prev, curr) => {
+      return prev.iadd(numberToBN(curr.amount))
+    }, numberToBN(0))
+
+    const amountOver = amountUtxosBalance.sub(numberToBN(amount))
+    const feeOver = feeUtxosBalance.sub(numberToBN(feeAmount))
+
+    if (amountOver.gt(numberToBN(0))) {
       txBody.outputs.push({
         owner: from,
         currency,
-        amount: CHANGE_AMOUNT
+        amount: amountOver
       })
     }
 
-    // if (utxosToSpend.length > 1) {
-    //   // The fee input can be returned
-    //   txBody.outputs.push({
-    //     owner: from,
-    //     currency: utxosToSpend[utxosToSpend.length - 1].currency,
-    //     amount: utxosToSpend[utxosToSpend.length - 1].amount
-    //   })
-    // }
+    if (feeOver.gt(numberToBN(0))) {
+      txBody.outputs.push({
+        owner: from,
+        currency: feeToken,
+        amount: feeOver
+      })
+    }
 
     // Get the transaction data
     const typedData = transaction.getTypedData(txBody, contract)
 
     // We should really sign each input separately but in this we know that they're all
     // from the same address, so we can sign once and use that signature for each input.
-    //
     // const sigs = await Promise.all(utxosToSpend.map(input => signTypedData(web3, web3.utils.toChecksumAddress(from), typedData)))
-    //
     const signature = await signTypedData(
       web3,
       web3.utils.toChecksumAddress(from),

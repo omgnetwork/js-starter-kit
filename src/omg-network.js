@@ -59,18 +59,16 @@ const omgNetwork = {
     ))
   },
 
-  transfer: async function (web3, childChain, from, to, amount, currency, contract) {
-    const transferZeroFee = currency !== transaction.ETH_CURRENCY
+  transfer: async function (web3, childChain, from, to, amount, currency, contract, feeToken, feeAmount) {
     const utxos = await childChain.getUtxos(from)
+
     const utxosToSpend = this.selectUtxos(
       utxos,
       amount,
       currency,
-      transferZeroFee
+      feeToken,
+      feeAmount
     )
-    if (!utxosToSpend) {
-      throw new Error(`No utxo big enough to cover the amount ${amount}`)
-    }
 
     const txBody = {
       inputs: utxosToSpend,
@@ -81,24 +79,50 @@ const omgNetwork = {
       }]
     }
 
-    const bnAmount = numberToBN(utxosToSpend[0].amount)
-    if (bnAmount.gt(numberToBN(amount))) {
-      // Need to add a 'change' output
-      const CHANGE_AMOUNT = bnAmount.sub(numberToBN(amount))
+    // add change outputs
+    if (feeToken === currency) {
+      const amountUtxosBalance = utxosToSpend.reduce((prev, curr) => {
+        return prev.iadd(numberToBN(curr.amount))
+      }, numberToBN(0))
+
+      const amountOver = amountUtxosBalance.sub(numberToBN(amount).iadd(numberToBN(feeAmount)))
       txBody.outputs.push({
         owner: from,
         currency,
-        amount: CHANGE_AMOUNT
+        amount: amountOver
       })
     }
 
-    if (transferZeroFee && utxosToSpend.length > 1) {
-      // The fee input can be returned
-      txBody.outputs.push({
-        owner: from,
-        currency: utxosToSpend[utxosToSpend.length - 1].currency,
-        amount: utxosToSpend[utxosToSpend.length - 1].amount
-      })
+    if (feeToken !== currency) {
+      const amountUtxos = utxosToSpend.filter(i => i.currency === currency)
+      const feeUtxos = utxosToSpend.filter(i => i.currency === feeToken)
+  
+      const amountUtxosBalance = amountUtxos.reduce((prev, curr) => {
+        return prev.iadd(numberToBN(curr.amount))
+      }, numberToBN(0))
+  
+      const feeUtxosBalance = feeUtxos.reduce((prev, curr) => {
+        return prev.iadd(numberToBN(curr.amount))
+      }, numberToBN(0))
+  
+      const amountOver = amountUtxosBalance.sub(numberToBN(amount))
+      const feeOver = feeUtxosBalance.sub(numberToBN(feeAmount))
+  
+      if (amountOver.gt(numberToBN(0))) {
+        txBody.outputs.push({
+          owner: from,
+          currency,
+          amount: amountOver
+        })
+      }
+  
+      if (feeOver.gt(numberToBN(0))) {
+        txBody.outputs.push({
+          owner: from,
+          currency: feeToken,
+          amount: feeOver
+        })
+      }
     }
 
     // Get the transaction data
@@ -106,9 +130,7 @@ const omgNetwork = {
 
     // We should really sign each input separately but in this we know that they're all
     // from the same address, so we can sign once and use that signature for each input.
-    //
     // const sigs = await Promise.all(utxosToSpend.map(input => signTypedData(web3, web3.utils.toChecksumAddress(from), typedData)))
-    //
     const signature = await signTypedData(
       web3,
       web3.utils.toChecksumAddress(from),
@@ -122,39 +144,78 @@ const omgNetwork = {
     return childChain.submitTransaction(signedTx)
   },
 
-  selectUtxos: function (utxos, amount, currency, includeFee) {
+  selectUtxos: function (utxos, amount, currency, feeToken, feeAmount) {
     // Filter by desired currency and sort in descending order
     const sorted = utxos
       .filter(utxo => utxo.currency === currency)
       .sort((a, b) => numberToBN(b.amount).sub(numberToBN(a.amount)))
 
-    if (sorted) {
-      const selected = []
-      let currentBalance = numberToBN(0)
+    // return early if no utxos
+    if (!sorted || !sorted.length) {
+      throw new Error(`No utxo big enough to cover the amount ${amount}`)
+    }
+    
+    // select utxos to cover amount
+    const selected = []
+
+    if (feeToken === currency) {
+      const amountNeeded = numberToBN(amount).iadd(numberToBN(feeAmount))
+      let currentSelectedUtxoBalance = numberToBN(0)
+
       for (let i = 0; i < Math.min(sorted.length, 4); i++) {
         selected.push(sorted[i])
-        currentBalance.iadd(numberToBN(sorted[i].amount))
-        if (currentBalance.gte(numberToBN(amount))) {
-          break
+        currentSelectedUtxoBalance.iadd(numberToBN(sorted[i].amount))
+        if (currentSelectedUtxoBalance.gte(amountNeeded)) {
+          return selected
         }
       }
 
-      if (currentBalance.gte(numberToBN(amount))) {
-        if (includeFee) {
-          // Find the first ETH utxo (that's not selected)
-          const ethUtxos = utxos.filter(
-            utxo => utxo.currency === transaction.ETH_CURRENCY
-          )
-          const feeUtxo = ethUtxos.find(utxo => utxo !== selected)
-          if (!feeUtxo) {
-            throw new Error(`Can't find a fee utxo for transaction`)
-          } else {
-            selected.push(feeUtxo)
-          }
-        }
+      // throw if not enough utxo's to cover total amount
+      throw new Error(`No utxo big enough to cover the amount ${amount} + fee ${feeAmount}`)
+    }
+
+    // feeToken is different from the currency
+    // find utxos to cover amount
+    const amountNeeded = numberToBN(amount)
+    let currentSelectedUtxoBalance = numberToBN(0)
+
+    for (let i = 0; i < Math.min(sorted.length, 4); i++) {
+      selected.push(sorted[i])
+      currentSelectedUtxoBalance.iadd(numberToBN(sorted[i].amount))
+      if (currentSelectedUtxoBalance.gte(amountNeeded)) {
+        break
+      }
+    }
+
+    if (currentSelectedUtxoBalance.lt(amountNeeded)) {
+      throw new Error(`No utxo big enough to cover the amount ${amount}`)
+    }
+
+    // amount is covered, now find utxos to cover the fee
+    const sortedAvailableFees = utxos
+      .filter(utxo => utxo.currency === feeToken)
+      .sort((a, b) => numberToBN(b.amount).sub(numberToBN(a.amount)))
+
+    // return early if no utxos to cover the fee
+    if (!sortedAvailableFees || !sortedAvailableFees.length) {
+      throw new Error(`No utxos big enough to cover the fee amount ${feeAmount}`)
+    }
+
+    // add fee token to inputs
+    const feeAmountNeeded = numberToBN(feeAmount)
+    let currentFeeUtxoBalance = numberToBN(0)
+    for (let i = 0; i < sortedAvailableFees.length; i++) {
+      if (selected.length === 4) {
+        throw new Error('No more available inputs to add fee utxo.')
+      }
+      selected.push(sortedAvailableFees[i])
+      currentFeeUtxoBalance.iadd(numberToBN(sortedAvailableFees[i].amount))
+      if (currentFeeUtxoBalance.gte(feeAmountNeeded)) {
         return selected
       }
     }
+
+    throw new Error(`No utxo big enough to cover the fee amount ${feeAmount}`)
   },
 
   deposit: async function (web3, rootChain, from, value, currency, approveDeposit) {

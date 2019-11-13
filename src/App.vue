@@ -122,9 +122,7 @@ import Transfer from "./Transfer.vue"
 import Exit from "./Exit.vue"
 import omgNetwork from "./omg-network"
 import config from "./config"
-import ChildChain from "@omisego/omg-js-childchain"
-import RootChain from "@omisego/omg-js-rootchain"
-import OmgUtil from "@omisego/omg-js-util"
+import { ChildChain, RootChain, OmgUtil } from "@omisego/omg-js"
 import Web3 from "web3"
 
 const web3Options = { transactionConfirmationBlocks: 1 }

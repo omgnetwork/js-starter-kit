@@ -6,7 +6,7 @@ Before you get started, make sure you have a local instance of elixir-omg runnin
 
 NOTE: 
 - This kit is meant for development and demonstration purposes. It is not safe for production use.
-- This example application is compatible with `elixir-omg v0.2`
+- This example application is compatible with `elixir-omg v0.3`
 
 ## Initial Setup
 

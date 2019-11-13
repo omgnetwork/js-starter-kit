@@ -15,7 +15,7 @@ limitations under the License.
  */
 
 const erc20abi = require('human-standard-token-abi')
-const { transaction } = require('@omisego/omg-js-util')
+const { OmgUtil } = require('@omisego/omg-js')
 const numberToBN = require('number-to-bn')
 
 const omgNetwork = {
@@ -44,7 +44,7 @@ const omgNetwork = {
     const childchainBalance = await childChain.getBalance(account.address)
     account.childBalance = await Promise.all(childchainBalance.map(
       async (balance) => {
-        if (balance.currency === transaction.ETH_CURRENCY) {
+        if (balance.currency === OmgUtil.transaction.ETH_CURRENCY) {
           balance.symbol = 'wei'
         } else {
           const tokenContract = new web3.eth.Contract(erc20abi, balance.currency)
@@ -126,7 +126,7 @@ const omgNetwork = {
     }
 
     // Get the transaction data
-    const typedData = transaction.getTypedData(txBody, contract)
+    const typedData = OmgUtil.transaction.getTypedData(txBody, contract)
 
     // We should really sign each input separately but in this we know that they're all
     // from the same address, so we can sign once and use that signature for each input.
@@ -220,13 +220,13 @@ const omgNetwork = {
 
   deposit: async function (web3, rootChain, from, value, currency, approveDeposit) {
     // Create the deposit transaction
-    const depositTx = transaction.encodeDeposit(
+    const depositTx = OmgUtil.transaction.encodeDeposit(
       from,
       value,
       currency
     )
 
-    if (currency === transaction.ETH_CURRENCY) {
+    if (currency === OmgUtil.transaction.ETH_CURRENCY) {
       // ETH deposit
       return rootChain.depositEth(depositTx, value, { from })
     }
@@ -257,11 +257,21 @@ const omgNetwork = {
   exitUtxo: async function (rootChain, childChain, from, utxoToExit) {
     const exitData = await childChain.getExitData(utxoToExit)
 
+    const hasToken = await rootChain.hasToken(utxoToExit.currency)
+    if (!hasToken) {
+      console.log('adding to exit queue...')
+      await rootChain.addToken(
+        utxoToExit.currency,
+        { from }
+      )
+    }
+
+    console.log('starting standard exit...')
     return rootChain.startStandardExit(
       Number(exitData.utxo_pos.toString()),
       exitData.txbytes,
       exitData.proof,
-      { from }
+      { from, gas: 600000 }
     )
   }
 }

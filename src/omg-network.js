@@ -60,83 +60,47 @@ const omgNetwork = {
   },
 
   transfer: async function (web3, childChain, from, to, amount, currency, contract, feeToken, feeAmount) {
-    const utxos = await childChain.getUtxos(from)
-
-    const utxosToSpend = this.selectUtxos(
-      utxos,
-      amount,
+    const payments = [{
+      owner: to,
       currency,
-      feeToken,
-      feeAmount
-    )
-
-    const txBody = {
-      inputs: utxosToSpend,
-      outputs: [{
-        owner: to,
-        currency,
-        amount: amount.toString()
-      }]
+      amount: Number(amount)
+    }]
+    const fee = {
+      currency: feeToken,
+      amount: Number(feeAmount)
     }
+    const createdTx = await childChain.createTransaction(from, payments, fee, OmgUtil.transaction.NULL_METADATA)
 
-    // add change outputs
-    if (feeToken === currency) {
-      const amountUtxosBalance = utxosToSpend.reduce((prev, curr) => {
-        return prev.iadd(numberToBN(curr.amount))
-      }, numberToBN(0))
-
-      const amountOver = amountUtxosBalance.sub(numberToBN(amount).iadd(numberToBN(feeAmount)))
-      txBody.outputs.push({
-        owner: from,
-        currency,
-        amount: amountOver
-      })
-    }
-
-    if (feeToken !== currency) {
-      const amountUtxos = utxosToSpend.filter(i => i.currency === currency)
-      const feeUtxos = utxosToSpend.filter(i => i.currency === feeToken)
-  
-      const amountUtxosBalance = amountUtxos.reduce((prev, curr) => {
-        return prev.iadd(numberToBN(curr.amount))
-      }, numberToBN(0))
-  
-      const feeUtxosBalance = feeUtxos.reduce((prev, curr) => {
-        return prev.iadd(numberToBN(curr.amount))
-      }, numberToBN(0))
-  
-      const amountOver = amountUtxosBalance.sub(numberToBN(amount))
-      const feeOver = feeUtxosBalance.sub(numberToBN(feeAmount))
-  
-      if (amountOver.gt(numberToBN(0))) {
-        txBody.outputs.push({
-          owner: from,
-          currency,
-          amount: amountOver
-        })
+    // if erc20 only inputs, add empty eth input to cover the fee
+    if (!createdTx.transactions[0].inputs.find(i => i.currency === OmgUtil.transaction.ETH_CURRENCY)) {
+      const utxos = await childChain.getUtxos(from)
+      const sorted = utxos
+        .filter(utxo => utxo.currency === OmgUtil.transaction.ETH_CURRENCY)
+        .sort((a, b) => numberToBN(b.amount).sub(numberToBN(a.amount)))
+      // return early if no utxos
+      if (!sorted || !sorted.length) {
+        throw new Error(`No ETH utxo available to cover the fee amount`)
       }
-  
-      if (feeOver.gt(numberToBN(0))) {
-        txBody.outputs.push({
-          owner: from,
-          currency: feeToken,
-          amount: feeOver
-        })
+      const ethUtxo = sorted[0]
+      const emptyOutput = {
+        amount: ethUtxo.amount,
+        currency: ethUtxo.currency,
+        owner: ethUtxo.owner
       }
+      createdTx.transactions[0].inputs.push(ethUtxo)
+      createdTx.transactions[0].outputs.push(emptyOutput)
     }
 
-    // Get the transaction data
-    const typedData = OmgUtil.transaction.getTypedData(txBody, contract)
+    const typedData = OmgUtil.transaction.getTypedData(createdTx.transactions[0], contract)
 
     // We should really sign each input separately but in this we know that they're all
     // from the same address, so we can sign once and use that signature for each input.
-    // const sigs = await Promise.all(utxosToSpend.map(input => signTypedData(web3, web3.utils.toChecksumAddress(from), typedData)))
     const signature = await signTypedData(
       web3,
       web3.utils.toChecksumAddress(from),
       JSON.stringify(typedData)
     )
-    const sigs = new Array(utxosToSpend.length).fill(signature)
+    const sigs = new Array(createdTx.transactions[0].inputs.length).fill(signature)
 
     // Build the signed transaction
     const signedTx = childChain.buildSignedTransaction(typedData, sigs)
@@ -144,79 +108,6 @@ const omgNetwork = {
     return childChain.submitTransaction(signedTx)
   },
 
-  selectUtxos: function (utxos, amount, currency, feeToken, feeAmount) {
-    // Filter by desired currency and sort in descending order
-    const sorted = utxos
-      .filter(utxo => utxo.currency === currency)
-      .sort((a, b) => numberToBN(b.amount).sub(numberToBN(a.amount)))
-
-    // return early if no utxos
-    if (!sorted || !sorted.length) {
-      throw new Error(`No utxo big enough to cover the amount ${amount}`)
-    }
-    
-    // select utxos to cover amount
-    const selected = []
-
-    if (feeToken === currency) {
-      const amountNeeded = numberToBN(amount).iadd(numberToBN(feeAmount))
-      let currentSelectedUtxoBalance = numberToBN(0)
-
-      for (let i = 0; i < Math.min(sorted.length, 4); i++) {
-        selected.push(sorted[i])
-        currentSelectedUtxoBalance.iadd(numberToBN(sorted[i].amount))
-        if (currentSelectedUtxoBalance.gte(amountNeeded)) {
-          return selected
-        }
-      }
-
-      // throw if not enough utxo's to cover total amount
-      throw new Error(`No utxo big enough to cover the amount ${amount} + fee ${feeAmount}`)
-    }
-
-    // feeToken is different from the currency
-    // find utxos to cover amount
-    const amountNeeded = numberToBN(amount)
-    let currentSelectedUtxoBalance = numberToBN(0)
-
-    for (let i = 0; i < Math.min(sorted.length, 4); i++) {
-      selected.push(sorted[i])
-      currentSelectedUtxoBalance.iadd(numberToBN(sorted[i].amount))
-      if (currentSelectedUtxoBalance.gte(amountNeeded)) {
-        break
-      }
-    }
-
-    if (currentSelectedUtxoBalance.lt(amountNeeded)) {
-      throw new Error(`No utxo big enough to cover the amount ${amount}`)
-    }
-
-    // amount is covered, now find utxos to cover the fee
-    const sortedAvailableFees = utxos
-      .filter(utxo => utxo.currency === feeToken)
-      .sort((a, b) => numberToBN(b.amount).sub(numberToBN(a.amount)))
-
-    // return early if no utxos to cover the fee
-    if (!sortedAvailableFees || !sortedAvailableFees.length) {
-      throw new Error(`No utxos big enough to cover the fee amount ${feeAmount}`)
-    }
-
-    // add fee token to inputs
-    const feeAmountNeeded = numberToBN(feeAmount)
-    let currentFeeUtxoBalance = numberToBN(0)
-    for (let i = 0; i < sortedAvailableFees.length; i++) {
-      if (selected.length === 4) {
-        throw new Error('No more available inputs to add fee utxo.')
-      }
-      selected.push(sortedAvailableFees[i])
-      currentFeeUtxoBalance.iadd(numberToBN(sortedAvailableFees[i].amount))
-      if (currentFeeUtxoBalance.gte(feeAmountNeeded)) {
-        return selected
-      }
-    }
-
-    throw new Error(`No utxo big enough to cover the fee amount ${feeAmount}`)
-  },
 
   deposit: async function (web3, rootChain, from, value, currency, approveDeposit) {
     const depositTx = OmgUtil.transaction.encodeDeposit(from, value, currency)

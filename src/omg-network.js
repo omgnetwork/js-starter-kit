@@ -219,39 +219,28 @@ const omgNetwork = {
   },
 
   deposit: async function (web3, rootChain, from, value, currency, approveDeposit) {
-    // Create the deposit transaction
-    const depositTx = OmgUtil.transaction.encodeDeposit(
-      from,
-      value,
-      currency
-    )
+    const depositTx = OmgUtil.transaction.encodeDeposit(from, value, currency)
 
+    // ETH deposit
     if (currency === OmgUtil.transaction.ETH_CURRENCY) {
-      // ETH deposit
-      return rootChain.depositEth(depositTx, value, { from })
+      return rootChain.depositEth(depositTx, value, { from, gas: 6000000 })
     }
 
     // ERC20 token deposit
     if (approveDeposit) {
-      // First approve the plasma contract on the erc20 contract
-      const erc20 = new web3.eth.Contract(erc20abi, currency)
-      // const approvePromise = Promise.promisify(erc20.approve.sendTransaction)
-
-      // TODO
-      const gasPrice = 1000000
-      const receipt = await erc20.methods.approve(
-        rootChain.plasmaContractAddress,
-        value
-      ).send(
-        { from, gasPrice, gas: 2000000 }
-      )
+      // First approve the erc20 vault on the erc20 contract
+      const erc20VaultAddress = await rootChain.getErc20VaultAddress()
+      const erc20Contract = new web3.eth.Contract(erc20abi, currency)
+      const receipt = await erc20Contract.methods
+        .approve(erc20VaultAddress, value)
+        .send({ from, gas: 6000000 })
       // Wait for the approve tx to be mined
       console.info(`${value} erc20 approved: ${receipt.transactionHash}. Waiting for confirmation...`)
       await confirmTransaction(web3, receipt.transactionHash)
       console.info(`... ${receipt.transactionHash} confirmed.`)
     }
 
-    return rootChain.depositToken(depositTx, { from })
+    return rootChain.depositToken(depositTx, { from, gas: 6000000 })
   },
 
   exitUtxo: async function (rootChain, childChain, from, utxoToExit) {

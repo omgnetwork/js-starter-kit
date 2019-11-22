@@ -136,22 +136,21 @@ const omgNetwork = {
 
   exitUtxo: async function (rootChain, childChain, from, utxoToExit) {
     const exitData = await childChain.getExitData(utxoToExit)
-
     const hasToken = await rootChain.hasToken(utxoToExit.currency)
     if (!hasToken) {
       console.log('adding to exit queue...')
       await rootChain.addToken(
         utxoToExit.currency,
-        { from }
+        { from, gas: 6000000 }
       )
     }
 
     console.log('starting standard exit...')
     return rootChain.startStandardExit(
-      Number(exitData.utxo_pos.toString()),
+      exitData.utxo_pos,
       exitData.txbytes,
       exitData.proof,
-      { from, gas: 600000 }
+      { from, gas: 6000000 }
     )
   }
 }

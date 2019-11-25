@@ -19,6 +19,7 @@ The endpoints for production deployment can be found [here](https://github.com/o
 2. Open up the file `config.js` in your favorite text editor.
 
 Replace the current configuration in `config.js` with your endpoints for `web3ProviderUrl`, `watcherUrl`, `plasmaContractAddress`.
+(Use the `plasma_framework` address listed in the link above for the `plasmaContractAddress` configuration)
 
 Save the `config.js` file.
 

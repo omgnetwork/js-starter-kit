@@ -52,6 +52,7 @@ limitations under the License.
                 <md-button v-on:click="toggleDeposit" class="md-raised md-primary action">Deposit</md-button>
                 <md-button v-on:click="toggleTransfer" class="md-raised md-primary action">Transfer</md-button>
                 <md-button v-on:click="toggleExit" class="md-raised md-primary action">Exit</md-button>
+                <md-button v-on:click="toggleProcessExit" class="md-raised md-primary action">Process Exits</md-button>
               </div>
             </div>
           </md-card>
@@ -107,6 +108,14 @@ limitations under the License.
         v-bind:activeAccount="activeAccount"
         v-bind:utxos="utxos"
       />
+
+      <ProcessExit
+        v-if="isShowProcessExit"
+        v-on:close="toggleProcessExit()"
+        v-bind:OmgUtil="OmgUtil"
+        v-bind:activeAccount="activeAccount"
+        v-bind:rootChain="rootChain"
+      />
     </div>
     <div v-else class="load-wallet">
       <h2>Enable MetaMask to continue...</h2>
@@ -120,6 +129,7 @@ import modal from "./Modal.vue"
 import Deposit from "./Deposit.vue"
 import Transfer from "./Transfer.vue"
 import Exit from "./Exit.vue"
+import ProcessExit from "./ProcessExit.vue"
 import omgNetwork from "./omg-network"
 import config from "./config"
 import { ChildChain, RootChain, OmgUtil } from "@omisego/omg-js"
@@ -153,13 +163,15 @@ export default {
     modal,
     Deposit,
     Transfer,
-    Exit
+    Exit,
+    ProcessExit
   },
   data() {
     return {
       hasWeb3: false,
       isShowDeposit: false,
       isShowExit: false,
+      isShowProcessExit: false,
       isShowTransfer: false,
       rootChain: {},
       childChain: {},
@@ -216,6 +228,9 @@ export default {
     },
     toggleExit() {
       this.isShowExit = !this.isShowExit
+    },
+    toggleProcessExit() {
+      this.isShowProcessExit = !this.isShowProcessExit
     }
   }
 }

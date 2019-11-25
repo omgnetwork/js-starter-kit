@@ -59,6 +59,18 @@ const omgNetwork = {
     ))
   },
 
+  processExits: async function (web3, rootChain, from, maxExitsToProcess, currency) {
+    return rootChain.processExits(
+      currency,
+      0,
+      maxExitsToProcess,
+      {
+        from,
+        gas: 6000000
+      }
+    )
+  },
+
   transfer: async function (web3, childChain, from, to, amount, currency, contract, feeToken, feeAmount) {
     const payments = [{
       owner: to,

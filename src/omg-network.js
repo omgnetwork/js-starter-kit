@@ -60,15 +60,15 @@ const omgNetwork = {
   },
 
   processExits: async function (web3, rootChain, from, maxExitsToProcess, currency) {
-    return rootChain.processExits(
-      currency,
-      0,
+    return rootChain.processExits({
+      token: currency,
+      exitId: 0,
       maxExitsToProcess,
-      {
+      txOptions: {
         from,
         gas: 6000000
       }
-    )
+    })
   },
 
   transfer: async function (web3, childChain, from, to, amount, currency, contract, feeToken, feeAmount) {
@@ -81,7 +81,12 @@ const omgNetwork = {
       currency: feeToken,
       amount: Number(feeAmount)
     }
-    const createdTx = await childChain.createTransaction(from, payments, fee, OmgUtil.transaction.NULL_METADATA)
+    const createdTx = await childChain.createTransaction({
+      owner: from,
+      payments,
+      fee,
+      metadata: OmgUtil.transaction.NULL_METADATA
+    })
 
     // if erc20 only inputs, add empty eth input to cover the fee
     if (!createdTx.transactions[0].inputs.find(i => i.currency === OmgUtil.transaction.ETH_CURRENCY)) {
@@ -126,24 +131,28 @@ const omgNetwork = {
 
     // ETH deposit
     if (currency === OmgUtil.transaction.ETH_CURRENCY) {
-      return rootChain.depositEth(depositTx, value, { from, gas: 6000000 })
+      return rootChain.depositEth({
+        depositTx,
+        amount: value,
+        txOptions: { from, gas: 6000000 }
+      })
     }
 
     // ERC20 token deposit
     if (approveDeposit) {
       // First approve the erc20 vault on the erc20 contract
-      const erc20VaultAddress = await rootChain.getErc20VaultAddress()
-      const erc20Contract = new web3.eth.Contract(erc20abi, currency)
-      const receipt = await erc20Contract.methods
-        .approve(erc20VaultAddress, value)
-        .send({ from, gas: 6000000 })
+      const receipt = await rootChain.approveToken({
+        erc20Address: currency,
+        amount: value,
+        txOptions: { from, gas: 6000000 }
+      })
       // Wait for the approve tx to be mined
       console.info(`${value} erc20 approved: ${receipt.transactionHash}. Waiting for confirmation...`)
       await confirmTransaction(web3, receipt.transactionHash)
       console.info(`... ${receipt.transactionHash} confirmed.`)
     }
 
-    return rootChain.depositToken(depositTx, { from, gas: 6000000 })
+    return rootChain.depositToken({ depositTx, txOptions: { from, gas: 6000000 } })
   },
 
   exitUtxo: async function (rootChain, childChain, from, utxoToExit) {
@@ -151,19 +160,19 @@ const omgNetwork = {
     const hasToken = await rootChain.hasToken(utxoToExit.currency)
     if (!hasToken) {
       console.log('adding to exit queue...')
-      await rootChain.addToken(
-        utxoToExit.currency,
-        { from, gas: 6000000 }
-      )
+      await rootChain.addToken({
+        token: utxoToExit.currency,
+        txOptions: { from, gas: 6000000 }
+      })
     }
 
     console.log('starting standard exit...')
-    return rootChain.startStandardExit(
-      exitData.utxo_pos,
-      exitData.txbytes,
-      exitData.proof,
-      { from, gas: 6000000 }
-    )
+    return rootChain.startStandardExit({
+      outputId: exitData.utxo_pos,
+      outputTx: exitData.txbytes,
+      inclusionProof: exitData.proof,
+      txOptions: { from, gas: 6000000 }
+    })
   }
 }
 

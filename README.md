@@ -10,7 +10,7 @@ NOTE:
 
 ## Initial Setup
 
-Make sure you have access to the endpoints including Watcher, Childchain, address of the Plasma Contract and Web3 RPC endpoint. The wallet also requires an in-browser web3 wallet like MetaMask to sign transactions.
+Make sure you have access to the endpoints including the Watcher, address of the Plasma Contract and a Web3 RPC endpoint. The wallet also requires an in-browser web3 wallet like MetaMask to sign transactions.
 
 The endpoints for production deployment can be found [here](https://github.com/omisego/dev-portal/blob/master/guides/network_endpoints.md)
 
@@ -18,7 +18,7 @@ The endpoints for production deployment can be found [here](https://github.com/o
 
 2. Open up the file `config.js` in your favorite text editor.
 
-Replace the current configuration in `config.js` with your endpoints for `web3ProviderUrl`, `watcherUrl`, `plasmaContractAddress`.
+Replace the current configuration in `config.js` with your endpoints for `watcherUrl` and `plasmaContractAddress`.
 (Use the `plasma_framework` address listed in the link above for the `plasmaContractAddress` configuration)
 
 Save the `config.js` file.
@@ -37,4 +37,4 @@ From here, you can perform 3 actions:
 
 3. Exit the funds back to Rootchain: Fill in an address that has funds in the OMG Network and click on OK, your exit period will start. Do note that the exit period will be varied based on the configuration of each `elixir-omg` deployment. After the certain amount of time has passed, you will be able to process the exit and receive your funds back.
 
-NOTE: the current wallet does not offer a way to call `processExit()` yet.
+4. If the challenge period has passed, your exit will exist in an exit queue of that token. You can call process exits on this queue to receive your funds back.

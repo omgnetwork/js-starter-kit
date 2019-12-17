@@ -17,6 +17,7 @@ limitations under the License.
 const erc20abi = require('human-standard-token-abi')
 const { OmgUtil } = require('@omisego/omg-js')
 const numberToBN = require('number-to-bn')
+const JSONBigNumber = require('json-bigint')
 
 const omgNetwork = {
   getAccounts: async function (web3) {
@@ -109,20 +110,22 @@ const omgNetwork = {
     }
 
     const typedData = OmgUtil.transaction.getTypedData(createdTx.transactions[0], contract)
-
     // We should really sign each input separately but in this we know that they're all
     // from the same address, so we can sign once and use that signature for each input.
     const signature = await signTypedData(
       web3,
       web3.utils.toChecksumAddress(from),
-      JSON.stringify(typedData)
+      JSONBigNumber.stringify(typedData)
     )
-    const sigs = new Array(createdTx.transactions[0].inputs.length).fill(signature)
+    const signatures = new Array(createdTx.transactions[0].inputs.length).fill(signature)
+    const signedTxn = childChain.buildSignedTransaction(typedData, signatures)
+    const submitted = await childChain.submitTransaction(signedTxn)
 
-    // Build the signed transaction
-    const signedTx = childChain.buildSignedTransaction(typedData, sigs)
-    // Submit the signed transaction to the childchain
-    return childChain.submitTransaction(signedTx)
+    // using submit typed...
+    // const signTyped = await childChain.signTypedData(createdTx.transactions[0], ['3C1FEC09834B23FFAC9A773D1FC3F03E859F5163E1FEDC0EDFE3FED325B47A62'])
+    // const submitted = await childChain.submitTyped(signTyped)
+
+    return submitted
   },
 
 

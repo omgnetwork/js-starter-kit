@@ -15,7 +15,8 @@
     "number-to-bn": "^1.7.0",
     "vue": "^2.5.11",
     "vue-material": "^1.0.0-beta-11",
-    "web3": "1.0.0-beta.55"
+    "web3": "1.0.0-beta.55",
+    "json-bigint": "git+https://git@github.com/omisego/json-bigint.git"
   },
   "browserslist": [
     "> 1%",

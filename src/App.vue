@@ -202,7 +202,7 @@ export default {
       this.hasWeb3 = true
 
       try {
-        this.rootChain = new RootChain(web3, config.plasmaContractAddress)
+        this.rootChain = new RootChain({ web3, plasmaContractAddress: config.plasmaContractAddress })
         this.childChain = new ChildChain({ watcherUrl: config.watcherUrl })
 
         const accounts = await omgNetwork.getAccounts(web3)

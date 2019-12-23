@@ -53,6 +53,10 @@ limitations under the License.
           Fee Amount:
           <input v-model="feeAmount">
         </div>
+        <div class="popup-input">
+          Metadata:
+          <input v-model="metadata">
+        </div>
       </div>
       <div>
         <md-button v-on:click="transfer(); $emit('close')" class="md-raised">Ok</md-button>
@@ -84,7 +88,8 @@ export default {
       feeToken: this.OmgUtil.transaction.ETH_CURRENCY,
       feeAmount: 0,
       transferAmount: 0,
-      transferToAddress: ''
+      transferToAddress: '',
+      metadata: ''
     }
   },
 
@@ -106,7 +111,8 @@ export default {
           tokenContract,
           this.rootChain.plasmaContractAddress,
           this.feeToken,
-          this.feeAmount
+          this.feeAmount,
+          this.metadata
         )
         this.$parent.info(`Submitted transaction: ${JSON.stringify(result)}`)
       } catch (err) {

@@ -1,7 +1,6 @@
 const localConfig = {
-  web3ProviderUrl: 'http://localhost:8545',
-  watcherUrl: 'http://localhost:7434',
-  plasmaContractAddress: '0xa1d683a00f63dda0cde68349ebfd38513d79433f'
+  watcherUrl: 'https://dev-835d10c-watcher-info-ropsten-01.omg.network',
+  plasmaContractAddress: '0x9f8d96cdae64bf6d88baed41a134eec8baa247b2'
 }
 
 module.exports = localConfig

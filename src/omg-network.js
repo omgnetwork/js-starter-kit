@@ -72,7 +72,7 @@ const omgNetwork = {
     })
   },
 
-  transfer: async function (web3, childChain, from, to, amount, currency, contract, feeToken, feeAmount) {
+  transfer: async function (web3, childChain, from, to, amount, currency, contract, feeToken, feeAmount, metadata) {
     const payments = [{
       owner: to,
       currency,
@@ -82,11 +82,12 @@ const omgNetwork = {
       currency: feeToken,
       amount: Number(feeAmount)
     }
+    const _metadata = metadata ? OmgUtil.transaction.encodeMetadata(metadata) : OmgUtil.transaction.NULL_METADATA
     const createdTx = await childChain.createTransaction({
       owner: from,
       payments,
       fee,
-      metadata: OmgUtil.transaction.NULL_METADATA
+      metadata: _metadata
     })
 
     // if erc20 only inputs, add empty eth input to cover the fee
@@ -171,7 +172,7 @@ const omgNetwork = {
 
     console.log('starting standard exit...')
     return rootChain.startStandardExit({
-      outputId: exitData.utxo_pos,
+      utxoPos: exitData.utxo_pos,
       outputTx: exitData.txbytes,
       inclusionProof: exitData.proof,
       txOptions: { from, gas: 6000000 }

@@ -17,6 +17,7 @@ limitations under the License.
 const erc20abi = require('human-standard-token-abi')
 const { OmgUtil } = require('@omisego/omg-js')
 const numberToBN = require('number-to-bn')
+const BN = require('bn.js')
 const JSONBigNumber = require('json-bigint')
 
 const omgNetwork = {
@@ -131,13 +132,13 @@ const omgNetwork = {
 
 
   deposit: async function (web3, rootChain, from, value, currency, approveDeposit) {
-    const depositTx = OmgUtil.transaction.encodeDeposit(from, value, currency)
+    const depositTx = OmgUtil.transaction.encodeDeposit(from, new BN(value), currency)
 
     // ETH deposit
     if (currency === OmgUtil.transaction.ETH_CURRENCY) {
       return rootChain.depositEth({
         depositTx,
-        amount: value,
+        amount: new BN(value),
         txOptions: { from, gas: 6000000 }
       })
     }
